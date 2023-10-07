@@ -15,11 +15,11 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREE
 # Set the window title
 pygame.display.set_caption("Fullscreen Pygame Window")
 
-# Load the "balloon.png" image
-balloon_image = pygame.image.load("balloon.png")
+# Load the "balloon.png" image from the "assets" directory
+balloon_image = pygame.image.load("assets/balloon.png")
 
-# Load the "splat.png" image for when a balloon is popped
-splat_image = pygame.image.load("splat.png")
+# Load the "splat.png" image from the "assets" directory for when a balloon is popped
+splat_image = pygame.image.load("assets/splat.png")
 
 # Get the dimensions of the balloon image
 original_width, original_height = balloon_image.get_size()
@@ -30,9 +30,6 @@ scaled_height = original_height // 3
 
 # Scale the balloon image
 balloon_image = pygame.transform.scale(balloon_image, (scaled_width, scaled_height))
-
-# Get the dimensions of the splat image
-splat_width, splat_height = splat_image.get_size()
 
 # Create a list to store balloon positions, speeds, and popped status
 balloons = []
