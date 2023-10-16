@@ -41,9 +41,11 @@ def spawn_balloon():
     popped = False
     return {"x": x, "y": y, "speed": speed, "popped": popped}
 
-# Spawn an initial set of balloons
-for _ in range(5):  # You can adjust the number of balloons
-    balloons.append(spawn_balloon())
+# Define a function to check if a point is inside a rectangle
+def is_point_inside_rect(point, rect):
+    x, y = point
+    rx, ry, rw, rh = rect
+    return rx <= x <= rx + rw and ry <= y <= ry + rh
 
 # Main game loop
 running = True
@@ -54,17 +56,23 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
             mouse_x, mouse_y = event.pos
+            balloon_clicked = None
             for balloon in balloons:
-                x, y = balloon["x"], balloon["y"]
-                if x <= mouse_x <= x + scaled_width and y <= mouse_y <= y + scaled_height:
+                x, y, popped = balloon["x"], balloon["y"], balloon["popped"]
+                balloon_rect = (x, y, scaled_width, scaled_height)
+                if not popped and is_point_inside_rect((mouse_x, mouse_y), balloon_rect):
                     # Balloon clicked, set its "popped" status to True
                     balloon["popped"] = True
+                    balloon_clicked = balloon
+            # Remove only the popped balloon to avoid multiple pops
+            if balloon_clicked:
+                balloons.remove(balloon_clicked)
 
     # Clear the screen with a white background
     screen.fill((255, 255, 255))
 
     # Update and draw the balloons
-    for balloon in balloons:
+    for balloon in balloons[:]:
         x, y, speed, popped = balloon["x"], balloon["y"], balloon["speed"], balloon["popped"]
         if not popped:
             screen.blit(balloon_image, (x, y))
@@ -79,6 +87,10 @@ while running:
         else:
             # Display the splat image at the balloon's position
             screen.blit(splat_image, (x, y))
+
+    # Spawn new balloons if there are fewer than 5 on the screen
+    while len(balloons) < 5:
+        balloons.append(spawn_balloon())
 
     # Update the display
     pygame.display.update()
