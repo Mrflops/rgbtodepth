@@ -1,48 +1,52 @@
-import pygame
-import sys
+import cv2
+import numpy as np
 
-# Initialize Pygame
-pygame.init()
+# Set the number of rows and columns on the checkerboard pattern
+rows, cols = 6, 9  # Adjust based on your checkerboard
 
-# Set the display width and height
-screen_width = 1980
-screen_height = 1080
+# Arrays to store object points and image points from all images
+objpoints = []  # 3D points in real world space
+imgpoints = []  # 2D points in image plane
 
-# Create a Pygame screen with the desired resolution and fullscreen flag
-screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+# Prepare object points, which are (0,0,0), (1,0,0), (2,0,0), ... (cols-1,rows-1,0)
+objp = np.zeros((cols * rows, 3), np.float32)
+objp[:, :2] = np.mgrid[0:cols, 0:rows].T.reshape(-1, 2)
 
-# Set the window title
-pygame.display.set_caption("Fullscreen Pygame Window")
+# Open a video capture source (0 for default camera, or provide a video file path)
+cap = cv2.VideoCapture(0)
 
-# Create a list to store the positions of green circles
-green_circles = []
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-# Fixed size for the green circles
-circle_size = (50, 50)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-# Main game loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    # Find the chessboard corners
+    ret, corners = cv2.findChessboardCorners(gray, (cols, rows), None)
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
-            mouse_x, mouse_y = event.pos
-            # Add a green circle with the fixed size at the mouse click position
-            green_circles.append((mouse_x - circle_size[0] // 2, mouse_y - circle_size[1] // 2))
+    if ret:
+        objpoints.append(objp)
+        imgpoints.append(corners)
 
-    # Clear the screen with a white background
-    screen.fill((255, 255, 255))
+        # Draw the corners on the frame
+        cv2.drawChessboardCorners(frame, (cols, rows), corners, ret)
 
-    # Draw and update the green circles
-    for circle_position in green_circles:
-        x, y = circle_position
-        pygame.draw.circle(screen, (0, 255, 0), (x + circle_size[0] // 2, y + circle_size[1] // 2), circle_size[0] // 2)
+    cv2.imshow('Calibration', frame)
 
-    # Update the display
-    pygame.display.update()
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-# Quit Pygame
-pygame.quit()
-sys.exit()
+cap.release()
+cv2.destroyAllWindows()
+
+# Perform camera calibration
+if len(objpoints) > 0 and len(imgpoints) > 0:
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+    if ret:
+        print("Camera calibration successful!")
+        print("Camera matrix:")
+        print(mtx)
+        print("Distortion coefficients:")
+        print(dist)
