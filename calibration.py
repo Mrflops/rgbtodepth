@@ -1,52 +1,67 @@
 import cv2
 import numpy as np
 
-# Set the number of rows and columns on the checkerboard pattern
-rows, cols = 6, 9  # Adjust based on your checkerboard
+# Set the size of the checkerboard pattern in pixels
+pattern_size = (10, 10)  # 10x10 pixel squares
 
-# Arrays to store object points and image points from all images
-objpoints = []  # 3D points in real world space
-imgpoints = []  # 2D points in image plane
+# Variables for the checkerboard pattern size
+pattern_width = 1980
+pattern_height = 1080
 
-# Prepare object points, which are (0,0,0), (1,0,0), (2,0,0), ... (cols-1,rows-1,0)
-objp = np.zeros((cols * rows, 3), np.float32)
-objp[:, :2] = np.mgrid[0:cols, 0:rows].T.reshape(-1, 2)
+# Create a full-screen window for the checkerboard pattern
+cv2.namedWindow('Full Screen Checkerboard', cv2.WND_PROP_FULLSCREEN)
+cv2.setWindowProperty('Full Screen Checkerboard', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-# Open a video capture source (0 for default camera, or provide a video file path)
-cap = cv2.VideoCapture(0)
+# Create a black image with the specified size
+checkerboard = np.ones((pattern_height, pattern_width, 3), dtype=np.uint8) * 255  # Set the background to white
+
+# Determine the size of the black corners
+corner_size = 100  # Adjust to your preference
+
+# Add the four black corners
+checkerboard[:corner_size, :corner_size] = [0, 0, 0]  # Top-left corner
+checkerboard[:corner_size, -corner_size:] = [0, 0, 0]  # Top-right corner
+checkerboard[-corner_size:, :corner_size] = [0, 0, 0]  # Bottom-left corner
+checkerboard[-corner_size:, -corner_size:] = [0, 0, 0]  # Bottom-right corner
+
+# Display the full-screen checkerboard pattern
+cv2.imshow('Full Screen Checkerboard', checkerboard)
+
+# Variables for calibration
+obj_points = []  # 3D points in real-world space
+img_points = []  # 2D points in the image plane
+
+# Define the coordinates of the four corners
+corner_coordinates = np.array([
+    [0, 0],
+    [pattern_width - corner_size, 0],
+    [0, pattern_height - corner_size],
+    [pattern_width - corner_size, pattern_height - corner_size]
+], dtype=np.float32)
+
+# Create a video capture object (0 for default camera)
+cap = cv2.VideoCapture(1)
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Draw and display the corners
+    for point in corner_coordinates:
+        x, y = point
+        frame = cv2.rectangle(frame, (int(x), int(y)), (int(x) + corner_size, int(y) + corner_size), (0, 0, 0), -1)
 
-    # Find the chessboard corners
-    ret, corners = cv2.findChessboardCorners(gray, (cols, rows), None)
-
-    if ret:
-        objpoints.append(objp)
-        imgpoints.append(corners)
-
-        # Draw the corners on the frame
-        cv2.drawChessboardCorners(frame, (cols, rows), corners, ret)
-
+    # Display the frame
     cv2.imshow('Calibration', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the camera and close the OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
 
-# Perform camera calibration
-if len(objpoints) > 0 and len(imgpoints) > 0:
-    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-
-    if ret:
-        print("Camera calibration successful!")
-        print("Camera matrix:")
-        print(mtx)
-        print("Distortion coefficients:")
-        print(dist)
+# Print the coordinates of the four corners
+print("Corner Coordinates:")
+print(corner_coordinates)
