@@ -1,67 +1,50 @@
 import cv2
 import numpy as np
 
-# Set the size of the checkerboard pattern in pixels
-pattern_size = (10, 10)  # 10x10 pixel squares
+# Create a video capture object for your camera
+cap = cv2.VideoCapture(0)  # Use the correct camera index
 
-# Variables for the checkerboard pattern size
-pattern_width = 1980
-pattern_height = 1080
+# Create a blank image for calibration
+calibration_image = np.zeros((720, 1280, 3), dtype=np.uint8)
 
-# Create a full-screen window for the checkerboard pattern
-cv2.namedWindow('Full Screen Checkerboard', cv2.WND_PROP_FULLSCREEN)
-cv2.setWindowProperty('Full Screen Checkerboard', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+# Initialize corner points
+corners = []  # Store the four corner points
 
-# Create a black image with the specified size
-checkerboard = np.ones((pattern_height, pattern_width, 3), dtype=np.uint8) * 255  # Set the background to white
+# Define a callback function to handle mouse events
+def mouse_callback(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN and len(corners) < 4:
+        corners.append((x, y))
+        cv2.circle(calibration_image, (x, y), 5, (0, 255, 0), -1)
 
-# Determine the size of the black corners
-corner_size = 100  # Adjust to your preference
+# Create a window and set the mouse callback
+cv2.namedWindow('Calibration')
+cv2.setMouseCallback('Calibration', mouse_callback)
 
-# Add the four black corners
-checkerboard[:corner_size, :corner_size] = [0, 0, 0]  # Top-left corner
-checkerboard[:corner_size, -corner_size:] = [0, 0, 0]  # Top-right corner
-checkerboard[-corner_size:, :corner_size] = [0, 0, 0]  # Bottom-left corner
-checkerboard[-corner_size:, -corner_size:] = [0, 0, 0]  # Bottom-right corner
-
-# Display the full-screen checkerboard pattern
-cv2.imshow('Full Screen Checkerboard', checkerboard)
-
-# Variables for calibration
-obj_points = []  # 3D points in real-world space
-img_points = []  # 2D points in the image plane
-
-# Define the coordinates of the four corners
-corner_coordinates = np.array([
-    [0, 0],
-    [pattern_width - corner_size, 0],
-    [0, pattern_height - corner_size],
-    [pattern_width - corner_size, pattern_height - corner_size]
-], dtype=np.float32)
-
-# Create a video capture object (0 for default camera)
-cap = cv2.VideoCapture(1)
-
-while True:
+while len(corners) < 4:
     ret, frame = cap.read()
-    if not ret:
-        break
 
-    # Draw and display the corners
-    for point in corner_coordinates:
-        x, y = point
-        frame = cv2.rectangle(frame, (int(x), int(y)), (int(x) + corner_size, int(y) + corner_size), (0, 0, 0), -1)
+    for corner in corners:
+        cv2.circle(frame, corner, 5, (0, 255, 0), -1)
 
-    # Display the frame
     cv2.imshow('Calibration', frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    key = cv2.waitKey(1) & 0xFF
 
-# Release the camera and close the OpenCV windows
+    if key == ord('c'):
+        # Calibration completed
+        break
+    elif key == ord('r'):
+        # Reset calibration
+        corners = []
+        calibration_image = np.zeros((720, 1280, 3), dtype=np.uint8)
+
 cap.release()
 cv2.destroyAllWindows()
 
-# Print the coordinates of the four corners
-print("Corner Coordinates:")
-print(corner_coordinates)
+# Print the four corner coordinates
+if len(corners) == 4:
+    print("Calibration completed.")
+    for i, corner in enumerate(corners, 1):
+        print(f"Corner {i}: {corner}")
+else:
+    print("Calibration was not completed.")
