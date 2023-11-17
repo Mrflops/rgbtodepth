@@ -4,8 +4,8 @@ import numpy as np
 
 np.set_printoptions(suppress=True)
 
-model = load_model("converted_keras old/keras_Model.h5", compile=False)
-class_names = [line.strip() for line in open("converted_keras old/labels.txt", "r").readlines()]
+model = load_model("converted_keras/keras_Model.h5", compile=False)
+class_names = [line.strip() for line in open("converted_keras/labels.txt", "r").readlines()]
 
 # Set the camera resolution
 camera_width, camera_height = 224, 224
