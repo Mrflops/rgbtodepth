@@ -1,77 +1,36 @@
-import cv2
-import numpy as np
-from keras.models import load_model
-
-# Calibration code
-cap = cv2.VideoCapture(0)  # Use the correct camera index
-calibration_image = np.zeros((720, 1280, 3), dtype=np.uint8)
-corners = []
-
-def mouse_callback(event, x, y, flags, param):
-    if event == cv2.EVENT_LBUTTONDOWN and len(corners) < 4:
-        corners.append((x, y))
-        cv2.circle(calibration_image, (x, y), 5, (0, 255, 0), -1)
-
-cv2.namedWindow('Calibration')
-cv2.setMouseCallback('Calibration', mouse_callback)
-
-while len(corners) < 4:
-    ret, frame = cap.read()
-
-    for corner in corners:
-        cv2.circle(frame, corner, 5, (0, 255, 0), -1)
-
-    cv2.imshow('Calibration', frame)
-
-    key = cv2.waitKey(1) & 0xFF
-
-    if key == ord('c'):
-        break
-    elif key == ord('r'):
-        corners = []
-        calibration_image = np.zeros((720, 1280, 3), dtype=np.uint8)
-
-cap.release()
-cv2.destroyAllWindows()
-
-if len(corners) != 4:
-    print("Calibration was not completed.")
-    exit()
-
-# Object detection and red ball detection code
-model = load_model("converted_keras/keras_Model.h5", compile=False)
-class_names = [line.strip() for line in open("converted_keras/labels.txt", "r").readlines()]
-
-camera_width, camera_height = 224, 224
-camera = cv2.VideoCapture(0)
-camera.set(3, camera_width)
-camera.set(4, camera_height)
-
-while True:
-    ret, image = camera.read()
-    if not ret:
-        break
-
-    # Calibration transformation
-    transformation_matrix = cv2.getPerspectiveTransform(np.float32(corners), np.float32([[0, 0], [720, 0], [720, 1280], [0, 1280]]))
-    calibrated_image = cv2.warpPerspective(image, transformation_matrix, (1280, 720))
-
-    original_image = calibrated_image.copy()
-
-    # Object detection code
-    resized_for_prediction = cv2.resize(original_image, (224, 224), interpolation=cv2.INTER_AREA)
-    prediction = model.predict(np.expand_dims(resized_for_prediction, axis=0))
-    index = np.argmax(prediction)
-    class_name = class_names[index].strip()
-    confidence_score = prediction[0][index]
-    print("Class:", class_name, "Confidence Score:", np.round(confidence_score * 100), "%")
-
-    # Display the calibrated image and object detection result
-    cv2.imshow("Calibrated Image", calibrated_image)
-    cv2.imshow("Object Detection Result", original_image)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-camera.release()
-cv2.destroyAllWindows()
+import pygame
+import sys
+# Initialize Pygame
+pygame.init()
+# Set the display width and height
+screen_width = 1980
+screen_height = 1080
+# Create a Pygame screen with the desired resolution and fullscreen flag
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+# Set the window title
+pygame.display.set_caption("Fullscreen Pygame Window")
+# Create a list to store the positions of green circles
+green_circles = []
+# Fixed size for the green circles
+circle_size = (50, 50)
+# Main game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
+            mouse_x, mouse_y = event.pos
+            # Add a green circle with the fixed size at the mouse click position
+            green_circles.append((mouse_x - circle_size[0] // 2, mouse_y - circle_size[1] // 2))
+    # Clear the screen with a white background
+    screen.fill((255, 255, 255))
+    # Draw and update the green circles
+    for circle_position in green_circles:
+        x, y = circle_position
+        pygame.draw.circle(screen, (0, 255, 0), (x + circle_size[0] // 2, y + circle_size[1] // 2), circle_size[0] // 2)
+    # Update the display
+    pygame.display.update()
+# Quit Pygame
+pygame.quit()
+sys.exit()

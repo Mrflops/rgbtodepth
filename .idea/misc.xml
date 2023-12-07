@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.9 (balldetectiongame)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.9 (balldetectiongame)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (rgbtodepth)" project-jdk-type="Python SDK" />
 </project>
