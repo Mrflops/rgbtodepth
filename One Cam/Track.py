@@ -4,6 +4,7 @@ import inference
 import supervision as sv
 
 annotator = sv.BoxAnnotator()
+API_KEY = "MhkSytDSM1IWRL6uFSkk"
 
 def calculate_middle_point(box):
     try:
