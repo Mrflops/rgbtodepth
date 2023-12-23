@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 from keras.models import load_model
-import pyautogui  # Import the pyautogui library
 
 # Load the model and class names
 model = load_model("converted_keras/keras_Model.h5", compile=False)
@@ -38,11 +37,6 @@ while len(calibration_corners) < 4:
     key = cv2.waitKey(1) & 0xFF
 
     if key == ord('c'):
-        # Simulate a mouse click at the center of the calibration square
-        if len(calibration_corners) == 4:
-            center_x = int(np.mean([point[0] for point in calibration_corners]))
-            center_y = int(np.mean([point[1] for point in calibration_corners]))
-            pyautogui.click(x=center_x, y=center_y)
         break
 
 calibration_camera.release()

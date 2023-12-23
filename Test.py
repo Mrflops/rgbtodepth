@@ -1,22 +1,14 @@
 import cv2
-print("Imported cv2")
-import numpy as np
-print("Imported numpy")
+import numpy as np  # Add this import statement for NumPy
 import inference
-print("Imported inference")
 import supervision as sv
-print("Imported supervision")
-import torch
-print("Imported torch")
-
-# Set PyTorch device to GPU if available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 annotator = sv.BoxAnnotator()
 API_KEY = "MhkSytDSM1IWRL6uFSkk"
 
 def calculate_middle_point(box):
     try:
+        # Assuming box is an iterable structure representing bounding box
         middle_x = int((box[0] + box[2]) / 2)
         middle_y = int((box[1] + box[3]) / 2)
         return middle_x, middle_y
@@ -35,6 +27,7 @@ def on_prediction(predictions, image):
                 print(f"Error processing tuple: {e}")
                 continue
         else:
+            # Handle other cases accordingly
             middle_point = None
         print("Detection Tuple:", detection)
         print("Middle Point:", middle_point)
@@ -49,13 +42,6 @@ def on_prediction(predictions, image):
         )
     )
     cv2.waitKey(1)
-
-# Check OpenCV version and set backend accordingly
-if cv2.__version__.startswith('3'):
-    print("OpenCV version 3.x detected. CUDA backend not supported.")
-else:
-    # Set OpenCV to use CUDA (GPU) if available
-    cv2.cuda.setDevice(0)  # Set the GPU device index, change it as needed
 
 inference.Stream(
     source="webcam",
